@@ -1,0 +1,4 @@
+pandas
+numpy
+pymongo
+# git+git://github.com/lamter/mydealutils.git#egg=mydealutils
