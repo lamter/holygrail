@@ -105,3 +105,4 @@ ENV/
 
 # project
 tmp/
+*.ini
