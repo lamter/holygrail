@@ -113,7 +113,7 @@ class Optimize(object):
 
         return self.dailyRollNav.apply(foo)
 
-    def draw3DpotentiometricAnaHisNavHigestWinLowest(self, months=3):
+    def draw3Dpotentiometric(self, method, months=3):
         """
         生成历史 24 个月变迁图
         取 24个月
@@ -150,7 +150,7 @@ class Optimize(object):
 
         for dt in dtList:
             try:
-                fn = '{}.anaHisNavHigestWinLowest.potentiometric_{}.png'.format(self.__class__.__name__, dt.date())
+                fn = '{}.{}.potentiometric_{}.png'.format(self.__class__.__name__, method, dt.date())
                 path = os.path.join(self.path, fn)
                 if not os.path.exists(path):
                     self.logger.info('绘制等势图 {}'.format(fn))
@@ -191,18 +191,18 @@ class Optimize(object):
         region = im.crop((x, y, x + w, y + h))
         region.save(path)
 
-    def vedio3DpotentiometricHistory(self):
+    def vedio3DpotentiometricHistory(self, method):
         """
         将 draw3DpotentiometricAnaHisNavHigestWinLowest 中的图片做成历史等势图历史变迁的视频
         :return:
         """
-        fn = '{}.anaHisNavHigestWinLowest3dPotentiometric.avi'.format(self.__class__.__name__)
+        fn = '{}.{}3dPotentiometric.avi'.format(self.__class__.__name__, method)
         path = os.path.join(self.path, fn)
         if os.path.exists(path):
             return
         fps = 2  # 视频帧率
         # fourcc = cv2.cv.CV_FOURCC('M', 'J', 'P', 'G')
-        fnpng = '{}.anaHisNavHigestWinLowest.potentiometric_*.png'.format(self.__class__.__name__)
+        fnpng = '{}.{}.potentiometric_*.png'.format(self.__class__.__name__, method)
         _filter = os.path.join(self.path, fnpng)
         img_path = sorted(gb.glob(_filter))
 
@@ -216,12 +216,12 @@ class Optimize(object):
             videoWriter.write(img)
         videoWriter.release()
 
-    def anaReturnRateRangeFrequency(self):
+    def anaReturnRateRangeFrequency(self, method):
         """
         收益率区间频率统计
         :return:
         """
-        fn = '{}.returnRateRangeFrequency.pickle'.format(self.__class__.__name__)
+        fn = '{}.returnRateRangeFrequency_{}.pickle'.format(self.__class__.__name__, method)
         path = os.path.join(self.path, fn)
         if os.path.exists(path):
             rangeFrequency = pd.read_pickle(path)
@@ -237,12 +237,20 @@ class Optimize(object):
         navList = []
         df.apply(lambda s: navList.extend(s.values))
         navSeries = pd.Series(navList)
+        navSeries[navSeries < 0] = 0
         # 计算收益率
         returnRateSeries = navSeries.apply(lambda d: d ** (1 / years) - 1)
 
-        # 等分价格为10个区间
+        # 等分收益率为10个区间
         areas = 10
-        quartiles = pd.qcut(returnRateSeries, areas)
+        try:
+            quartiles = pd.qcut(returnRateSeries, areas)
+        except ValueError:
+            err = traceback.format_exc()
+            if 'Bin edges must be unique' in err:
+                quartiles = pd.cut(returnRateSeries, areas)
+            else:
+                raise
 
         # 定义聚合函数
         def get_stats(group):
@@ -262,5 +270,80 @@ class Optimize(object):
 
         # 缓存
         rangeFrequency.to_pickle(path)
+
+        return rangeFrequency
+
+
+    def optWinHighNav(self, periodList, navRangeList):
+        """
+        优化 anaWinHighNav 的结果
+        在窗口周期 periodList 范围内，和在 navRangeList 窗口期内净值最高的
+        :param periodList:
+        :param navRangeList:
+        :return: DataFrame() 获得对应窗口周期和历史排名下的参数的收益
+        """
+
+        winNavDic = {}
+        dailyNavDic = {}
+
+        for hisNavRange in navRangeList:
+            w, d = [], []
+            for period in periodList:
+                # 生成窗口净值和对应的日线净值
+
+                winRollNavDF, dailyRollNavDF = self._optWinHighNav(period, hisNavRange)
+                w.append(winRollNavDF)
+                d.append(dailyRollNavDF)
+            winNavDic[hisNavRange] = w
+            dailyNavDic[hisNavRange] = d
+
+        self.winRollNav = pd.DataFrame(winNavDic, index=periodList).T
+        self.dailyRollNav = pd.DataFrame(dailyNavDic, index=periodList).T
+
+    def _optWinHighNav(self, period, hisNavRange):
+        """
+        获取 winRollNavDF, dailyRollNavDF
+        :param period:
+        :param hisNavRange:
+        :return:
+        """
+        fn_1 = '{}.winRollNavDF_WinHighNav_{}_{}.pickle'.format(self.__class__.__name__, period, hisNavRange)
+        fn_2 = '{}.dailyRollNavDF_WinHighNav_{}_{}.pickle'.format(self.__class__.__name__, period, hisNavRange)
+        path_1 = os.path.join(self.path, fn_1)
+        path_2 = os.path.join(self.path, fn_2)
+
+        # 以period, hisNavRange 作为参数规则取得滚动窗口净值 winrollNav
+        if os.path.exists(path_1) and os.path.exists(path_2):
+            # 从缓存加载
+            self.logger.info('缓存加载 {} {}'.format(fn_1, fn_2))
+            winRollNavDF = pd.read_pickle(path_1)
+            dailyRollNavDF = pd.read_pickle(path_2)
+        else:
+            # 直接生成
+            self.logger.info('计算 {} {}'.format(fn_1, fn_2))
+            winRollNavDF, dailyRollNavDF = self._async_optWinHighNav(
+                period, hisNavRange, path_1, path_2)
+
+        return winRollNavDF, dailyRollNavDF
+
+    def _async_optWinHighNav(self, period, hisNavRange, path_1, path_2):
+        winRollNavDF, dailyRollNavDF = self.winroll.anaWinHighNav(period, hisNavRange)
+        winRollNavDF.to_pickle(path_1)
+        dailyRollNavDF.to_pickle(path_2)
+        return winRollNavDF, dailyRollNavDF
+
+
+    def anaDrawdown(self, method):
+        """
+        分析最大回撤
+        :return:
+        """
+        fn = '{}.maxDrawdown_{}.pickle'.format(self.__class__.__name__, method)
+        path = os.path.join(self.path, fn)
+        if os.path.exists(path):
+            minDrawdown = pd.read_pickle(path)
+            return minDrawdown
+
+        nav = self.winroll.nav
 
         return rangeFrequency

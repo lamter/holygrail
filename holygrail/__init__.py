@@ -5,7 +5,8 @@ from .optimize import Optimize
 
 __all__ = [
     'Winroll',
-    'optHisNavHihestWinLowest',
     'Btinfo',
-    'Optimize'
+    'Optimize',
+    'optHisNavHihestWinLowest',
+    'optWinRollNav',
 ]

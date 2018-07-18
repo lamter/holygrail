@@ -108,9 +108,6 @@ class Nav(object):
 
         self.summarizeDialyDF = self.summarizeDialyDF[columns]
 
-        # 检查始末日期
-        self.checkStartEndDate()
-
         # 缓存当前属性
         self.dump()
 
@@ -119,7 +116,7 @@ class Nav(object):
         try:
             return self._startDate
         except AttributeError:
-            self._startDate = self.summarizeDialyDF['首个交易日'].iloc[0]
+            self._startDate = min(self.summarizeDialyDF['首个交易日'].value_counts().index)
             return self._startDate
 
     @property
@@ -127,7 +124,7 @@ class Nav(object):
         try:
             return self._endDate
         except AttributeError:
-            self._endDate = self.summarizeDialyDF['最后交易日'].iloc[0]
+            self._endDate = max(self.summarizeDialyDF['最后交易日'].value_counts().index)
             return self._endDate
 
     def _calDailyNav(self, consisDF):
@@ -146,11 +143,6 @@ class Nav(object):
         # 衔接日期
         dateIndex = pd.DatetimeIndex(list(chain(*consisDF['结算日'])), name='datetime', tz=LOCAL_TIMEZONE)
 
-        # counts = dateIndex.value_counts()
-        # if counts[counts > 1].shape[0]:
-        #     # 存在重复日期
-        #     raise ValueError('存在重复日期')
-
         # 衔接收益率
         navDF = pd.DataFrame({'日收益率': list(chain(*consisDF['日收益率']))}, index=dateIndex)
 
@@ -161,6 +153,8 @@ class Nav(object):
         # 累乘，得到净值序列
         navDF['净值'] = navDF['日收益率'] + 1
         navDF['净值'] = navDF['净值'].cumprod()
+        # 将净值小于0全部设置为0
+        navDF['净值'][navDF['净值'] < 0] = 0
 
         return navDF
 
@@ -192,10 +186,7 @@ class Nav(object):
             '品种': us,
             '首个交易日': navDF.index[0].to_pydatetime(),
             '最后交易日': navDF.index[-1].to_pydatetime(),
-
             '总交易日': navDF.shape[0],
-            '盈利交易日': (navDF['日收益率'] > 0).value_counts()[True],
-            '亏损交易日': (navDF['日收益率'] < 0).value_counts()[True],
 
             '最大保证金占用': consisDF['最大保证金占用'].max(),
             '最终净值': navDF['净值'].iloc[-1],
@@ -204,12 +195,23 @@ class Nav(object):
             '爆仓': minNav < 0.1,
             '最大回撤': navDF['回撤'].min(),
 
-            '日复利': navDF['净值'].iloc[-1] ** (1 / navDF.shape[0]),
-            '年复利': (navDF['净值'].iloc[-1] ** (1 / navDF.shape[0])) ** TRAE_DAYS,
             '日均收益率': mean,
             '收益标准差': std,
-            '夏普率': mean / std * np.sqrt(TRAE_DAYS),
         }
+        try:
+            dic['夏普率'] = mean / std * np.sqrt(TRAE_DAYS),
+        except ZeroDivisionError:
+            dic['夏普率'] = 0
+        dic['日复利'] = navDF['净值'].iloc[-1] ** (1 / dic['总交易日'])
+        dic['年复利'] = (navDF['净值'].iloc[-1] ** (1 / dic['总交易日'])) ** TRAE_DAYS
+        try:
+            dic['盈利交易日'] = (navDF['日收益率'] > 0).value_counts()[True]
+        except KeyError:
+            dic['盈利交易日'] = 0
+        try:
+            dic['亏损交易日'] = (navDF['日收益率'] < 0).value_counts()[True]
+        except KeyError:
+            dic['亏损交易日'] = 0
 
         # 参数
         dic.update(kwargs)
@@ -283,14 +285,3 @@ class Nav(object):
 
         self.origin = pd.DataFrame((_ for _ in cursor))
 
-    def checkStartEndDate(self):
-        """
-        所有的 optsv 的首个交易日和最终交易日应该都是一样的
-        :return:
-        """
-        df = self.summarizeDialyDF
-        if df['首个交易日'].value_counts().shape[0] != 1:
-            raise ValueError('首个交易日不一致')
-
-        if df['最后交易日'].value_counts().shape[0] != 1:
-            raise ValueError('最后交易日不一致')

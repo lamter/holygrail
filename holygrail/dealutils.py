@@ -66,3 +66,14 @@ def exception(func):
     # 缓存
     exceptionDic[func] = wrapper
     return wrapper
+
+def calDrawdown(nav):
+    """
+    返回净值的回撤
+    :param nav: Series(index=datetime , values=float(净值))
+    :return: Series(index=datetime , values= float(回撤)<=0)
+    """
+    import numpy as np
+    _max = np.maximum.accumulate(nav, 1)
+    return nav / _max - 1
+

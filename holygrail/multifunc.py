@@ -44,7 +44,7 @@ def initWinrollDf(ppid, configIni, us, periodList, group, className, path):
     wr = Winroll(nav)
     for period in periodList:
         logger.info('加载 winroll {} {}'.format(us, period))
-        wr.loadDF(period)
+        wr.loadOptsvNavByWin(period)
 
 
 @exception
@@ -62,3 +62,19 @@ def optimizeOptHisNavHihestWinLowest(ppid, configIni, us, period, histNavRangeLi
     wr = Winroll(nav)
     opt = Optimize(wr)
     opt.optHisNavHigestWinLowest([period], histNavRangeList)
+
+@exception
+def optimizeOptWinHighNav(ppid, configIni, us, period, histNavRangeList, group, className, path):
+    logger = logging.getLogger()
+    if not (os.getpid() != ppid and os.getppid() == ppid):
+        logger.info('父进程 不执行 {}'.format(ppid))
+        return
+    config = ConfigParser()
+    config.read(configIni)
+
+    nav = Nav(config, us, group, className, path)
+    nav.run()
+
+    wr = Winroll(nav)
+    opt = Optimize(wr)
+    opt.optWinHighNav([period], histNavRangeList)
