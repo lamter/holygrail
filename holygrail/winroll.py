@@ -119,12 +119,12 @@ class Winroll(object):
         """
 
         # 计算窗口期收益
-        self.optsvNavByWin= self.loadDF(period)
+        self.optsvNavByWin= self.loadOptsvNavByWin(period)
 
         # 计算出窗口期净值曲线
         # winRollNavDF 的 optsv 是 index1 引用于 index2 得到 nav
         # winRollNavDF 的最后一个 optsv 基于最后一个窗口的数据计算得到的。最后一个窗口的数据可能是不完整的
-        winRollNavDF = self._hisNavHihestWinLowest(self.df, hisNavRange)
+        winRollNavDF = self._hisNavHihestWinLowest(self.optsvNavByWin, hisNavRange)
 
         # 转换为日线净值曲线
         dailyRollNavDF = self._win2daily(winRollNavDF)
