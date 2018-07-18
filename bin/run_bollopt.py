@@ -5,8 +5,8 @@ from configparser import ConfigParser
 from holygrail.dealutils import *
 from holygrail.btinfo import Btinfo
 
-logging.config.fileConfig('/Users/lamter/workspace/SlaveO/holygrail/tmp/logging.ini')
-configIni = '/Users/lamter/workspace/SlaveO/holygrail/tmp/boll_opt.ini'
+logging.config.fileConfig('./logging.ini')
+configIni = './boll_opt.ini'
 
 config = ConfigParser()
 config.read(configIni)

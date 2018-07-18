@@ -1,4 +1,8 @@
+arrow
+matplotlib
 pandas
 numpy
 pymongo
+pillow
+opencv
 # git+git://github.com/lamter/mydealutils.git#egg=mydealutils
