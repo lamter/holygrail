@@ -176,14 +176,14 @@ def optWinRollNav(configIni, usList, group, className, periodList, navRangeList)
 
     path = config.get('优化', 'path')
 
-    # 先生成 Nav 的缓存
-    _initNav(usList, pid, configIni, group, className, path)
-
-    # 生成  Wiroll.df
-    _initWinrollDF(usList, cpu, pid, configIni, periodList, group, className, path)
-
-    # 分解任务, 异步执行，并进行缓存
-    _optWinHighNav(pid, configIni, usList, cpu, periodList, navRangeList, group, className, path)
+    # # 先生成 Nav 的缓存
+    # _initNav(usList, pid, configIni, group, className, path)
+    #
+    # # 生成  Wiroll.df
+    # _initWinrollDF(usList, cpu, pid, configIni, periodList, group, className, path)
+    #
+    # # 分解任务, 异步执行，并进行缓存
+    # _optWinHighNav(pid, configIni, usList, cpu, periodList, navRangeList, group, className, path)
 
     # 对优化结果进行分析
     _anaWinHIghNav(configIni, usList, periodList, navRangeList, group, className, path)
@@ -200,14 +200,14 @@ def _anaWinHIghNav(configIni, usList, periodList, histNavRangeList, group, class
         opt = Optimize(wr)
         opt.optWinHighNav(periodList, histNavRangeList)
 
-        # 生成 排名-窗口期 净值等势图
-        opt.draw3Dpotentiometric(method='anaWinHighNav',months=12 * 10)
-
-        # 生成等势图历史变迁视频
-        opt.vedio3DpotentiometricHistory(method='anaWinHighNav')
-
-        # 统计收益率区间频率
-        opt.anaReturnRateRangeFrequency(method='anaWinHighNav')
+        # # 生成 排名-窗口期 净值等势图
+        # opt.draw3Dpotentiometric(method='anaWinHighNav',months=12 * 10)
+        #
+        # # 生成等势图历史变迁视频
+        # opt.vedio3DpotentiometricHistory(method='anaWinHighNav')
+        #
+        # # 统计收益率区间频率
+        # opt.anaReturnRateRangeFrequency(method='anaWinHighNav')
 
         # 统计最大最小回撤
-        # opt.(method='anaWinHighNav')
+        opt.anaDrawdown(method='anaWinHighNav')

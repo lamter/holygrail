@@ -8,6 +8,7 @@ import datetime
 
 import pandas as pd
 import matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
@@ -77,7 +78,6 @@ class Winroll(object):
         # 窗口期收益
         return pd.DataFrame(dic)
 
-
     def _choseNavInWin(self, df, rollingSumNavDF, hisNavRange):
         """
 
@@ -119,7 +119,7 @@ class Winroll(object):
         """
 
         # 计算窗口期收益
-        self.optsvNavByWin= self.loadOptsvNavByWin(period)
+        self.optsvNavByWin = self.loadOptsvNavByWin(period)
 
         # 计算出窗口期净值曲线
         # winRollNavDF 的 optsv 是 index1 引用于 index2 得到 nav
@@ -204,7 +204,6 @@ class Winroll(object):
         s = pd.Series(rollingNavList, index=dates)
         return pd.DataFrame({'窗口收益率': s - 1, 'nav': s.cumprod(), 'optsv': optsvList})
 
-
     def anaWinHighNav(self, period='3BM', navRange=100):
         """
         1. 选取历史收益最大的 navRange 组参数
@@ -216,7 +215,7 @@ class Winroll(object):
         """
 
         # 计算窗口期收益
-        df = self.optsvNavByWin= self.loadOptsvNavByWin(period)
+        df = self.optsvNavByWin = self.loadOptsvNavByWin(period)
 
         # 计算出窗口期净值曲线
         # winRollNavDF 的 optsv 是 index1 引用于 index2 得到 nav
@@ -255,7 +254,6 @@ class Winroll(object):
             df.to_pickle(path)
 
         return df
-
 
     def loadOptsvWinRateByWin(self, period):
         """

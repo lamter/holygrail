@@ -6,7 +6,7 @@ from holygrail.dealutils import *
 from holygrail.btinfo import Btinfo
 
 logging.config.fileConfig('/Users/lamter/workspace/SlaveO/holygrail/tmp/logging.ini')
-configIni = '/Users/lamter/workspace/SlaveO/holygrail/tmp/oscillationDonchian_opt.ini'
+configIni = '/Users/lamter/workspace/SlaveO/holygrail/bin/oscillationDonchian_opt.ini'
 
 config = ConfigParser()
 config.read(configIni)

@@ -1,5 +1,6 @@
 import pytz
 import json
+import numpy as np
 import pymongo
 from configparser import ConfigParser
 import functools
@@ -73,7 +74,7 @@ def calDrawdown(nav):
     :param nav: Series(index=datetime , values=float(净值))
     :return: Series(index=datetime , values= float(回撤)<=0)
     """
-    import numpy as np
-    _max = np.maximum.accumulate(nav, 1)
-    return nav / _max - 1
-
+    _max = np.maximum.accumulate(nav)
+    s = nav / _max - 1
+    s.name = '回撤'
+    return s
