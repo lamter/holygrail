@@ -8,6 +8,7 @@ import glob as gb
 
 from collections import defaultdict, OrderedDict
 from myplot.nav import draw_3D_potentiometric
+from .dealutils import calDrawdown
 
 
 class Optimize(object):
@@ -344,6 +345,9 @@ class Optimize(object):
             minDrawdown = pd.read_pickle(path)
             return minDrawdown
 
-        nav = self.winroll.nav
+        def maxDrawndwon(nav):
+            nav = nav.nav
+            s = calDrawdown(nav).min()
+            return s.min()
 
-        return rangeFrequency
+        return self.dailyRollNav.apply(lambda _df:_df.apply(maxDrawndwon))
