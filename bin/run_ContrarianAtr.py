@@ -6,7 +6,7 @@ from holygrail.dealutils import *
 from holygrail.btinfo import Btinfo
 
 logging.config.fileConfig('/Users/lamter/workspace/SlaveO/holygrail/tmp/logging.ini')
-configIni = '/Users/lamter/workspace/SlaveO/holygrail/bin/oscillationDonchian_opt.ini'
+configIni = '/Users/lamter/workspace/SlaveO/holygrail/bin/ContrarianAtr_opt.ini'
 
 config = ConfigParser()
 config.read(configIni)
@@ -14,7 +14,7 @@ config.read(configIni)
 path = config.get('优化', 'path')
 db = getDB(config)
 
-group, className = '镍唐奇安震荡20180919', 'OscillationDonchianStrategy'
+group, className = '反转ATR固定手数3', 'ContrarianAtrStrategy'
 
 # periodList = ['{}BM'.format(i) for i in range(1, 13)]
 # histNavRangeList = list(range(1, 101))
