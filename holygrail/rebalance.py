@@ -18,7 +18,7 @@ class Rebalance(object):
         self.dailyReturnDF = dailyReturnDF
         self.diff = diff
         self.navDF = None  # 合成出来的净值曲线 columns=[参数名1, 参数名2, ..., 平均]
-        self.drawndown = None # 对合成出来的净值曲线计算回撤
+        self.drawdown = None # 对合成出来的净值曲线计算回撤
 
     def run(self):
         """
@@ -78,5 +78,4 @@ class Rebalance(object):
         for col in self.navDF.columns:
             dd[col] = calDrawdown(self.navDF[col])
 
-        self.drawndown = pd.DataFrame(dd)
-
+        self.drawdown = pd.DataFrame(dd)
